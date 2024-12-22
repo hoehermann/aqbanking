@@ -175,9 +175,23 @@ int _extractChallengeAndText(const char *sChallengeHhd,
     else {
       /* no optical challenge */
       DBG_ERROR(AQHBCI_LOGDOMAIN, "Challenge contains no optical data");
-      GWEN_Buffer_AppendString(bufGuiText, I18N("The server provided the following challenge:"));
-      GWEN_Buffer_AppendString(bufGuiText, "\n");
-      GWEN_Buffer_AppendString(bufGuiText, sChallenge);
+      
+      // TODO: only try this if tanMethod is USB
+      {
+        int rv;
+        char startcode[9];
+        rv=sscanf(sChallenge, "Stecke die Karte (%*s %*u) in den TAN-Generator und drücke die Taste TAN.<br>Gib den Startcode %8s ein und drücke die Taste OK.<br>Bitte bestätige den Auftrag mit der TAN deines TAN-Generators.", startcode);
+        DBG_ERROR(AQHBCI_LOGDOMAIN, "sscanf rv is %d", rv);
+        if (1==rv) {
+          GWEN_Buffer_AppendString(bufChallenge, "1008");
+          GWEN_Buffer_AppendString(bufChallenge, startcode);
+          GWEN_Buffer_AppendString(bufGuiText, I18N("Please enter the TAN from the device."));
+        } else {
+          GWEN_Buffer_AppendString(bufGuiText, I18N("The server provided the following challenge:"));
+          GWEN_Buffer_AppendString(bufGuiText, "\n");
+          GWEN_Buffer_AppendString(bufGuiText, sChallenge);
+        }
+      }
     }
   }
   else {
